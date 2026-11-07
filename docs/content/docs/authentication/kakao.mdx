@@ -10,6 +10,9 @@ description: Kakao provider setup and usage.
 
     To use Kakao sign in, you need a client ID and client secret. You can get them from the [Kakao Developer Portal](https://developers.kakao.com).
 
+    * The client ID is your app's [REST API key](https://developers.kakao.com/docs/en/app-setting/app#rest-api-key).
+    * [Client secret](https://developers.kakao.com/docs/en/app-setting/app#client-secret) is enabled by default for REST API keys, so sign-in fails without `clientSecret`. You can find it under the REST API key settings in the console.
+
     Make sure to set the redirect URL to `http://localhost:3000/api/auth/callback/kakao` for local development. For production, you should set it to the URL of your application. If you change the base path of the auth routes, you should update the redirect URL accordingly.
   </Step>
 
@@ -20,7 +23,7 @@ description: Kakao provider setup and usage.
 
     <Callout type="info">
       * The default scopes are `account_email`, `profile_image`, and `profile_nickname`.
-      * Note that retrieving `account_email` requires the app to be a **Biz App** (an app that has completed business verification). For more details, refer to the [Kakao Login scopes documentation](https://developers.kakao.com/docs/latest/kakaologin/utilize#scope-user).
+      * Note that retrieving `account_email` requires the app to be a **Biz App** (an app that has completed business verification) or a test app. For more details, refer to the [Kakao Login scopes documentation](https://developers.kakao.com/docs/en/kakaologin/utilize#scope-user).
     </Callout>
 
     ```ts title="auth.ts"
@@ -35,6 +38,21 @@ description: Kakao provider setup and usage.
         }
     })
     ```
+
+    If your app can't configure `account_email`, Kakao rejects the default scopes with [`KOE205`](https://developers.kakao.com/docs/en/kakaologin/trouble-shooting#code). Replace the default scopes with the consent items configured in your app:
+
+    ```ts title="auth.ts"
+    kakao: {
+        clientId: process.env.KAKAO_CLIENT_ID as string,
+        clientSecret: process.env.KAKAO_CLIENT_SECRET as string,
+        disableDefaultScope: true, // [!code highlight]
+        scope: ["profile_nickname", "profile_image"], // [!code highlight]
+    },
+    ```
+
+    <Callout>
+      Kakao omits `email` when the app doesn't request `account_email` or the user doesn't consent to it. See [Handling Providers Without Email](/docs/concepts/oauth#handling-providers-without-email) for the recommended `mapProfileToUser` fallback.
+    </Callout>
   </Step>
 
   <Step>
